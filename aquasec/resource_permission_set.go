@@ -32,7 +32,7 @@ func resourcePermissionSet() *schema.Resource {
 			},
 			"author": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"ui_access": {
 				Type:     schema.TypeBool,
@@ -78,7 +78,7 @@ func resourcePermissionSetUpdate(d *schema.ResourceData, m interface{}) error {
 	ac := m.(*client.Client)
 	name := d.Get("name").(string)
 
-	if d.HasChanges("description", "author", "ui_access", "is_super", "actions") {
+	if d.HasChanges("description", "ui_access", "is_super", "actions") {
 		iap := expandPermissionSet(d)
 		err := ac.UpdatePermissionsSet(iap)
 		if err == nil {
