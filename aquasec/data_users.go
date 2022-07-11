@@ -11,6 +11,8 @@ import (
 
 func dataSourceUsers() *schema.Resource {
 	return &schema.Resource{
+		Description: "The data source `aquasec_users` provides a method to query all users within the Aqua " +
+			"users database. The fields returned from this query are detailed in the Schema section below.",
 		ReadContext: resourceRead,
 		Schema: map[string]*schema.Schema{
 			"users": {
@@ -20,26 +22,56 @@ func dataSourceUsers() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"user_id": {
 							Type:     schema.TypeString,
+							Description: "The user ID.",
 							Computed: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
+							Description: "The user name.",
 							Computed: true,
 						},
 						"email": {
 							Type:     schema.TypeString,
+							Description: "The user Email.",
 							Computed: true,
 						},
 						"first_time": {
 							Type:     schema.TypeBool,
+							Description: "If the user must change password at next login.",
+							Computed: true,
+						},
+						"is_super": {
+							Type:     schema.TypeBool,
+							Description: "Give the Permission Set full access, meaning all actions are allowed without restriction.",
+							Computed: true,
+						},
+						"ui_access": {
+							Type:     schema.TypeBool,
+							Description: "Whether to allow UI access for users with this Permission Set.",
+							Computed: true,
+						},
+						"role": {
+							Type:     schema.TypeString,
+							Description: "The first role that assigned to the user for backward compatibility.",
 							Computed: true,
 						},
 						"roles": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
+							Description: "The roles that will be assigned to the user.",
 							Computed: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Description: "The user type (Aqua, LDAP, SAML, OAuth2, OpenID, Tenant Manager).",
+							Computed: true,
+						},
+						"plan": {
+							Type:     schema.TypeString,
+							Description: "User's Aqua plan (Developer / Team / Advanced).",
+							Computed: true,
 						},
 					},
 				},

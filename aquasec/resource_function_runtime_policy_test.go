@@ -11,6 +11,7 @@ import (
 )
 
 func TestResourceAquasecBasicFunctionRuntimePolicyCreate(t *testing.T) {
+	t.Parallel()
 	var runtimePolicy = client.RuntimePolicy{
 		Name:        acctest.RandomWithPrefix("test-function-runtime-policy"),
 		Description: "This is a test description of function runtime policy",
@@ -42,6 +43,7 @@ func TestResourceAquasecBasicFunctionRuntimePolicyCreate(t *testing.T) {
 }
 
 func TestResourceAquasecFunctionRuntimePolicyUpgrade(t *testing.T) {
+	t.Parallel()
 	var runtimePolicy = client.RuntimePolicy{
 		Name:        acctest.RandomWithPrefix("test-function-runtime-policy"),
 		Description: "This is a test description of function runtime policy",
@@ -79,6 +81,9 @@ func TestResourceAquasecFunctionRuntimePolicyUpgrade(t *testing.T) {
 					resource.TestCheckResourceAttr(rootRef, "enforce", fmt.Sprintf("%v", runtimePolicy.Enforce)),
 					resource.TestCheckResourceAttr(rootRef, "author", os.Getenv("AQUA_USER")),
 					resource.TestCheckResourceAttr(rootRef, "block_malicious_executables", "true"),
+					resource.TestCheckResourceAttr(rootRef, "block_running_executables_in_tmp_folder", "true"),
+					//todo: bring back after we upgrade the testing env
+					//resource.TestCheckResourceAttr(rootRef, "block_malicious_executables_allowed_processes.#", "2"),
 					resource.TestCheckResourceAttr(rootRef, "blocked_executables.#", "2"),
 				),
 			},
@@ -109,6 +114,11 @@ func getUpdatedFunctionRuntimePolicyResource(policy client.RuntimePolicy) string
 		enabled = "%v"
 		enforce = "%v"
 		block_malicious_executables = true
+		block_running_executables_in_tmp_folder = true
+		# block_malicious_executables_allowed_processes = [
+		# 	"proc1",
+		# 	"proc2"
+		# ]
 		blocked_executables = [
 			"exe1",
 			"exe2",

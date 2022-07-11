@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     aquasec = {
-      //      version = "0.8.1"
+      //      version = "0.8.9"
       source  = "aquasecurity/aquasec"
     }
   }
@@ -76,4 +76,55 @@ data "aquasec_host_runtime_policy" "test" {
 
 output "test-hrp" {
   value = data.aquasec_host_runtime_policy.test
+}
+
+
+data "aquasec_gateways" "testgateways" {
+}
+
+output "gateways" {
+  value = data.aquasec_gateways.testgateways
+}
+
+data "aquasec_image_assurance_policy" "default-iap" {
+    name = "DTA"
+}
+
+output "image-assurance" {
+  value = data.aquasec_image_assurance_policy.default-iap
+}
+
+data "aquasec_permissions_sets" "testpermissionsset" {}
+
+output "permissions_sets" {
+  value = data.aquasec_permissions_sets.testpermissionsset
+}
+
+output "permissions_sets_names" {
+  value = data.aquasec_permissions_sets.testpermissionsset[*].permissions_sets[*].name
+}
+
+
+data "aquasec_host_assurance_policy" "default-hap" {
+    name = "Default"
+}
+
+output "host-assurance" {
+  value = data.aquasec_host_assurance_policy.default-hap
+}
+
+data "aquasec_function_assurance_policy" "default-fap" {
+    name = "Default"
+}
+
+output "function-assurance" {
+  value = data.aquasec_function_assurance_policy.default-fap
+}
+
+data "aquasec_application_scope" "default" {
+    name = "Global"
+}
+
+output "scopes" {
+  value = data.aquasec_application_scope.default
 }

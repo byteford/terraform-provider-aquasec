@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-
 	"github.com/aquasecurity/terraform-provider-aquasec/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
+	"io/ioutil"
+	"log"
+	"os"
 )
 
 //Config - godoc
@@ -30,59 +29,81 @@ func Provider(v string) *schema.Provider {
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("AQUA_USER", nil),
+				Description: "This is the user id that should be used to make the connection. Can alternatively be sourced from the `AQUA_USER` environment variable.",
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("AQUA_PASSWORD", nil),
+				Description: "This is the password that should be used to make the connection. Can alternatively be sourced from the `AQUA_PASSWORD` environment variable.",
 			},
 			"aqua_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("AQUA_URL", nil),
+				Description: "This is the base URL of your Aqua instance. Can alternatively be sourced from the `AQUA_URL` environment variable.",
 			},
 			"verify_tls": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("AQUA_TLS_VERIFY", true),
-				Description: "If true, server tls certificates will be verified by the client before making a connection. Defaults to true.",
+				Description: "If true, server tls certificates will be verified by the client before making a connection. Defaults to true. Can alternatively be sourced from the `AQUA_TLS_VERIFY` environment variable.",
 			},
 			"ca_certificate_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("AQUA_CA_CERT_PATH", nil),
-				Description: "This is the file path for server CA certificates if they are not available on the host OS.",
+				Description: "This is the file path for server CA certificates if they are not available on the host OS. Can alternatively be sourced from the `AQUA_CA_CERT_PATH` environment variable.",
 			},
 			"config_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("AQUA_CONFIG", "~/.aquasec/tf.config"),
-				Description: "This is the file path for Aqua provider configuration. The default configuration path is ~/.aqua/tf.config",
+				Description: "This is the file path for Aqua provider configuration. The default configuration path is `~/.aqua/tf.config`. Can alternatively be sourced from the `AQUA_CONFIG` environment variable.",
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"aquasec_user":                     resourceUser(),
-			"aquasec_integration_registry":     resourceRegistry(),
-			"aquasec_firewall_policy":          resourceFirewallPolicy(),
-			"aquasec_enforcer_groups":          resourceEnforcerGroup(),
-			"aquasec_service":                  resourceService(),
-			"aquasec_image":                    resourceImage(),
-			"aquasec_notification_slack":       resourceNotification(),
-			"aquasec_container_runtime_policy": resourceContainerRuntimePolicy(),
-			"aquasec_function_runtime_policy":  resourceFunctionRuntimePolicy(),
-			"aquasec_host_runtime_policy":      resourceHostRuntimePolicy(),
+			"aquasec_user":                      resourceUser(),
+			"aquasec_role":                      resourceRole(),
+			"aquasec_integration_registry":      resourceRegistry(),
+			"aquasec_firewall_policy":           resourceFirewallPolicy(),
+			"aquasec_enforcer_groups":           resourceEnforcerGroup(),
+			"aquasec_service":                   resourceService(),
+			"aquasec_image":                     resourceImage(),
+			"aquasec_notification_slack":        resourceNotification(),
+			"aquasec_container_runtime_policy":  resourceContainerRuntimePolicy(),
+			"aquasec_function_runtime_policy":   resourceFunctionRuntimePolicy(),
+			"aquasec_host_runtime_policy":       resourceHostRuntimePolicy(),
+			"aquasec_host_assurance_policy":     resourceHostAssurancePolicy(),
+			"aquasec_image_assurance_policy":    resourceImageAssurancePolicy(),
+			"aquasec_function_assurance_policy": resourceFunctionAssurancePolicy(),
+			"aquasec_application_scope":         resourceApplicationScope(),
+			"aquasec_permissions_sets":          resourcePermissionSet(),
+			//saas
+			"aquasec_group":     resourceGroup(),
+			"aquasec_user_saas": resourceUserSaas(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"aquasec_users":                    dataSourceUsers(),
-			"aquasec_integration_registries":   dataSourceRegistry(),
-			"aquasec_firewall_policy":          dataSourceFirewallPolicy(),
-			"aquasec_enforcer_groups":          dataSourceEnforcerGroup(),
-			"aquasec_service":                  dataSourceService(),
-			"aquasec_image":                    dataImage(),
-			"aquasec_container_runtime_policy": dataContainerRuntimePolicy(),
-			"aquasec_function_runtime_policy":  dataFunctionRuntimePolicy(),
-			"aquasec_host_runtime_policy":      dataHostRuntimePolicy(),
+			"aquasec_users":                     dataSourceUsers(),
+			"aquasec_roles":                     dataSourceRoles(),
+			"aquasec_integration_registries":    dataSourceRegistry(),
+			"aquasec_firewall_policy":           dataSourceFirewallPolicy(),
+			"aquasec_enforcer_groups":           dataSourceEnforcerGroup(),
+			"aquasec_service":                   dataSourceService(),
+			"aquasec_image":                     dataImage(),
+			"aquasec_container_runtime_policy":  dataContainerRuntimePolicy(),
+			"aquasec_function_runtime_policy":   dataFunctionRuntimePolicy(),
+			"aquasec_host_runtime_policy":       dataHostRuntimePolicy(),
+			"aquasec_image_assurance_policy":    dataImageAssurancePolicy(),
+			"aquasec_host_assurance_policy":     dataHostAssurancePolicy(),
+			"aquasec_function_assurance_policy": dataFunctionAssurancePolicy(),
+			"aquasec_gateways":                  dataSourceGateways(),
+			"aquasec_application_scope":         dataApplicationScope(),
+			"aquasec_permissions_sets":          dataSourcePermissionsSets(),
+			//saas:
+			"aquasec_groups":     dataSourceGroups(),
+			"aquasec_users_saas": dataSourceUsersSaas(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -141,21 +162,21 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	if username == "" {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Initializing provider, username parameter is missing",
+			Summary:  "Initializing provider, username parameter is missing.",
 		})
 	}
 
 	if password == "" {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Initializing provider, password parameter is missing",
+			Summary:  "Initializing provider, password parameter is missing.",
 		})
 	}
 
 	if aquaURL == "" {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Initializing provider, aqua_url parameter is missing",
+			Summary:  "Initializing provider, aqua_url parameter is missing.",
 		})
 	}
 
@@ -179,15 +200,26 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	aquaClient := client.NewClient(aquaURL, username, password, verifyTLS, caCertByte)
 
-	_, err = aquaClient.GetAuthToken()
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to fetch token",
-			Detail:   err.Error(),
-		})
+	token, tokenPresent := os.LookupEnv("TESTING_AUTH_TOKEN")
 
-		return nil, diags
+	url, urlPresent := os.LookupEnv("TESTING_URL")
+
+	if !tokenPresent || !urlPresent {
+		_, _, err = aquaClient.GetAuthToken()
+
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to fetch token",
+				Detail:   err.Error(),
+			})
+
+			return nil, diags
+		}
+	} else {
+		aquaClient.SetAuthToken(token)
+		aquaClient.SetUrl(url)
+
 	}
 
 	return aquaClient, diags

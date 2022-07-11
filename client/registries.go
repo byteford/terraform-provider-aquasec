@@ -38,6 +38,7 @@ type Registry struct {
 	PullImageAge        string        `json:"pull_image_age"`
 	PullImageTagPattern []interface{} `json:"pull_image_tag_pattern"`
 	AlwaysPullPatterns  []interface{} `json:"always_pull_patterns"`
+	ScannerType         string        `json:"scanner_type"`
 }
 
 func (cli *Client) GetRegistry(name string) (*Registry, error) {
@@ -91,6 +92,7 @@ func (cli *Client) GetRegistries() (*[]Registry, error) {
 
 // CreateRegistry - creates single Aqua registry
 func (cli *Client) CreateRegistry(reg Registry) error {
+
 	payload, err := json.Marshal(reg)
 	if err != nil {
 		return err
@@ -98,12 +100,12 @@ func (cli *Client) CreateRegistry(reg Registry) error {
 	request := cli.gorequest
 	request.Set("Authorization", "Bearer "+cli.token)
 	apiPath := fmt.Sprintf("/api/v1/registries")
-	resp, _, errs := request.Clone().Post(cli.url + apiPath).Send(string(payload)).End()
+	resp, data, errs := request.Clone().Post(cli.url + apiPath).Send(string(payload)).End()
 	if errs != nil {
 		return errors.Wrap(err, "failed creating registry")
 	}
-	if resp.StatusCode != 201 && resp.StatusCode != 204 {
-		return err
+	if resp.StatusCode != 201 && resp.StatusCode != 204 && resp.StatusCode != 200 {
+		return errors.Errorf(data)
 	}
 	return nil
 }
@@ -117,12 +119,12 @@ func (cli *Client) UpdateRegistry(reg Registry) error {
 	request := cli.gorequest
 	request.Set("Authorization", "Bearer "+cli.token)
 	apiPath := fmt.Sprintf("/api/v1/registries/%s", reg.Name)
-	resp, _, errs := request.Clone().Put(cli.url + apiPath).Send(string(payload)).End()
+	resp, data, errs := request.Clone().Put(cli.url + apiPath).Send(string(payload)).End()
 	if errs != nil {
 		return errors.Wrap(err, "failed modifying registry")
 	}
-	if resp.StatusCode != 201 && resp.StatusCode != 204 {
-		return err
+	if resp.StatusCode != 201 && resp.StatusCode != 204 && resp.StatusCode != 200 {
+		return errors.Errorf(data)
 	}
 	return nil
 }
@@ -137,7 +139,7 @@ func (cli *Client) DeleteRegistry(name string) error {
 		return fmt.Errorf("error while calling DELETE on /api/v1/users/%s: %v", name, events.StatusCode)
 	}
 	if events.StatusCode != 204 {
-		return fmt.Errorf("failed deleting user, status code: %v", events.StatusCode)
+		return fmt.Errorf("failed deleting registry, status code: %v", events.StatusCode)
 	}
 	return nil
 }

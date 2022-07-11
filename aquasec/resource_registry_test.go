@@ -4,24 +4,27 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAquasecresourceRegistry(t *testing.T) {
-	name := "testdemo"
+	t.Parallel()
+	name := acctest.RandomWithPrefix("terraform-test")
 	url := "https://docker.io"
 	rtype := "HUB"
 	username := ""
 	password := ""
 	prefixes := ""
 	autopull := false
+	scanner_type := "any"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAquasecRegistry(name, url, rtype, username, password, prefixes, autopull),
+				Config: testAccCheckAquasecRegistry(name, url, rtype, username, password, prefixes, autopull, scanner_type),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAquasecRegistryExists("aquasec_integration_registry.new"),
 				),
@@ -30,7 +33,7 @@ func TestAquasecresourceRegistry(t *testing.T) {
 	})
 }
 
-func testAccCheckAquasecRegistry(name string, url string, rtype string, username string, password string, prefix string, autopull bool) string {
+func testAccCheckAquasecRegistry(name string, url string, rtype string, username string, password string, prefix string, autopull bool, scanner_type string) string {
 	return fmt.Sprintf(`
 	resource "aquasec_integration_registry" "new" {
 		name = "%s"
@@ -42,7 +45,8 @@ func testAccCheckAquasecRegistry(name string, url string, rtype string, username
 			"%s"
 		]
 		auto_pull = "%v"
-	  }`, name, url, rtype, username, password, prefix, autopull)
+		scanner_type = "%s"
+	}`, name, url, rtype, username, password, prefix, autopull, scanner_type)
 
 }
 

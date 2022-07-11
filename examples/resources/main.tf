@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     aquasec = {
-      //      version = "0.8.1"
+      //      version = "0.8.9"
       source  = "aquasecurity/aquasec"
     }
   }
@@ -257,5 +257,140 @@ resource "aquasec_host_runtime_policy" "test" {
     excluded_processes  = ["exprocess"]
     monitored_users     = ["user"]
     excluded_users      = ["expuser"]
+  }
+}
+
+resource "aquasec_image_assurance_policy" "newiap" {
+    name = "testprovider"
+    assurance_type = "image"
+    description = "Created using Terraform"
+    application_scopes = [
+        "Global"
+    ]
+    audit_on_failure = true
+    fail_cicd = true
+    block_failed = true
+    whitelisted_licenses_enabled = true
+    whitelisted_licenses = [
+        "AGPL-3.0",
+        "Apache-2.0",
+        "BSD-2-Clause"
+    ]
+}
+
+resource "aquasec_permissions_sets" "my_terraform_perm_set" {
+		name = "my_terraform_perm_set"
+		description     = "created from terraform"
+		author    = "system"
+		ui_access = true
+		is_super = false
+		actions = [
+          "dashboard.read",
+          "risks.vulnerabilities.read",
+          "risks.vulnerabilities.write",
+          "risks.host_images.read",
+          "risks.benchmark.read",
+          "risk_explorer.read",          
+          "images.read", 
+          "image_profiles.read",
+          "image_assurance.read",
+          "image_assurance.write",          
+          "runtime_policies.read", 
+          "runtime_policies.write", 
+          "functions.read", 
+          "gateways.read",
+          "secrets.read",
+          "audits.read",
+          "containers.read",
+          "enforcers.read",         
+          "infrastructure.read",
+          "consoles.read",
+          "settings.read",
+          "network_policies.read",
+          "acl_policies.read",
+          "acl_policies.write",
+          "services.read",
+          "integrations.read",
+          "registries_integrations.read",
+          "web_hook.read",
+          "incidents.read"    
+		]
+}
+resource "aquasec_host_assurance_policy" "newhap" {
+    name = "testprovider"
+    description = "Created using Terraform"
+    application_scopes = [
+        "Global"
+    ]
+    audit_on_failure = true
+    fail_cicd = true
+    block_failed = true
+    whitelisted_licenses_enabled = true
+    whitelisted_licenses = [
+        "AGPL-3.0",
+        "Apache-2.0",
+        "BSD-2-Clause"
+    ]
+}
+
+resource "aquasec_function_assurance_policy" "newfap" {
+    name = "testprovider"
+    description = "Created using Terraform"
+    application_scopes = [
+        "Global"
+    ]
+    audit_on_failure = true
+    fail_cicd = true
+    block_failed = true
+    maximum_score         = "1.0"
+    maximum_score_enabled = true
+}
+
+resource "aquasec_application_scope" "terraformiap" {
+  description = "test123"
+  name        = "test18"
+  // Categories is a nested block of artifacts, workloads and infrastructure
+  categories {
+    // Artifacts is a nested block of Image, Function, CF
+    artifacts {
+      // Every object requires expression(logical combinations of variables v1, v2, v3...) and list of variables consists of attribute(pre-defined) and value
+      image {
+        expression = "v1 && v2"
+        variables {
+          attribute = "aqua.registry"
+          value     = "test-registry"
+        }
+        variables {
+          attribute = "image.repo"
+          value     = "nginx"
+        }
+      }
+    }
+    // Workloads is a nested block of Kubernetes, OS, CF
+    workloads {
+      // Every object requires expression(logical combinations of variables v1, v2, v3...) and list of variables consists of attribute(pre-defined) and value
+      kubernetes {
+        expression = "v1 && v2"
+        variables {
+          attribute = "kubernetes.cluster"
+          value     = "aqua"
+        }
+        variables {
+          attribute = "kubernetes.namespace"
+          value     = "aqua"
+        }
+      }
+    }
+    // Infrastructure is a nested block of Kubernetes, OS
+    infrastructure {
+      // Every object requires expression and list of variables consists of attribute(pre-defined) and value
+      kubernetes {
+        expression = "v1"
+        variables {
+          attribute = "kubernetes.cluster"
+          value     = "aqua"
+        }
+      }
+    }
   }
 }

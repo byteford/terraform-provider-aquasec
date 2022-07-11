@@ -20,12 +20,14 @@ func init() {
 }
 
 func TestProvider(t *testing.T) {
+	t.Parallel()
 	if err := Provider(testVersion).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
+	t.Parallel()
 	var _ *schema.Provider = Provider(testVersion)
 }
 
@@ -45,4 +47,5 @@ func testAccPreCheck(t *testing.T) {
 	if err := os.Getenv("AQUA_URL"); err == "" {
 		t.Fatal("AQUA_URL must be set for acceptance tests")
 	}
+
 }

@@ -8,6 +8,11 @@ import (
 )
 
 func TestAquasecUserManagementDatasource(t *testing.T) {
+
+	if isSaasEnv() {
+		t.Skip("Skipping user test because its saas env")
+	}
+	t.Parallel()
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -24,7 +29,6 @@ func testAccCheckAquasecUserDataSource() string {
 	return `
 	data "aquasec_users" "testusers" {}
 	`
-
 }
 
 func testAccCheckAquasecUsersDataSourceExists(n string) resource.TestCheckFunc {
